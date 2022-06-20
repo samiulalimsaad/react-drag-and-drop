@@ -25,14 +25,28 @@ const draggableArr = [
 ];
 
 const Home: NextPage = () => {
-    const [completed, setCompleted] = useState([]);
+    const [completed, setCompleted] = useState<any>([]);
 
-    const onDrop = (e) => {
-        const newDiv = draggableArr.filter(
-            (v) => v.id == e.dataTransfer.getData("Id")
+    const onDrop = (e: any) => {
+        e.preventDefault();
+        const div_id = e.dataTransfer.getData("Id");
+        // const block = document.getElementById(div_id);
+        let dropIndex = Array.from(e.target.children).findIndex(
+            (child: any) => child.getBoundingClientRect().bottom > e.clientY
         );
-        console.log({ newDiv }, e.dataTransfer.getData("Id"));
-        setCompleted((p) => [...p, ...newDiv]);
+        console.log({ dropIndex });
+        if (dropIndex === -1) {
+            const newDiv = draggableArr.filter(
+                (v) => v.id == e.dataTransfer.getData("Id")
+            );
+            setCompleted((p: any) => [...p, ...newDiv]);
+        } else {
+            const newDiv = draggableArr.filter(
+                (v) => v.id == e.dataTransfer.getData("Id")
+            );
+            const newCompleted = completed.splice(dropIndex, 0, ...newDiv);
+            setCompleted((p: any) => [...p, ...newCompleted]);
+        }
     };
 
     return (
@@ -42,6 +56,7 @@ const Home: NextPage = () => {
                 {draggableArr.map((v) => (
                     <div
                         key={v.id}
+                        id={v.id}
                         draggable
                         onDragStart={(e) =>
                             e.dataTransfer.setData("Id", "" + v.id)
@@ -57,12 +72,12 @@ const Home: NextPage = () => {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
             >
-                {completed?.map((v) => (
+                {completed?.map((v: any) => (
                     <div
-                        key={v.id}
-                        className={`h-40 w-40 ${v.color} grid place-items-center`}
+                        key={v?.id}
+                        className={`h-40 w-40 ${v?.color} grid place-items-center`}
                     >
-                        {v.id}
+                        {v?.id}
                     </div>
                 ))}
             </div>
