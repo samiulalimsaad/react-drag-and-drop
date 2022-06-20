@@ -1,88 +1,106 @@
+import axios from "axios";
 import type { NextPage } from "next";
-import { useState } from "react";
-
-const draggableArr = [
-    {
-        id: 1,
-        color: "bg-red-400",
-    },
-    {
-        id: 2,
-        color: "bg-blue-400",
-    },
-    {
-        id: 3,
-        color: "bg-teal-400",
-    },
-    {
-        id: 4,
-        color: "bg-orange-400",
-    },
-    {
-        id: 5,
-        color: "bg-indigo-400",
-    },
-];
+import { Key, useEffect, useState } from "react";
+import { blockInterface } from "../backend/utils/Block.Interface";
 
 const Home: NextPage = () => {
-    const [completed, setCompleted] = useState<any>([]);
+    const [equation, setEquation] = useState<blockInterface[]>([]);
+    const [blocks, setBlocks] = useState<blockInterface[]>([]);
+    useEffect(() => {
+        const getBlocks = async () => {
+            const { data } = await axios.get("/api/blocks");
+            setBlocks(data.blocks);
+        };
+        getBlocks();
+    }, []);
 
     const onDrop = (e: any) => {
         e.preventDefault();
-        const div_id = e.dataTransfer.getData("Id");
-        // const block = document.getElementById(div_id);
         let dropIndex = Array.from(e.target.children).findIndex(
-            (child: any) => child.getBoundingClientRect().bottom > e.clientY
+            (child: any) => child.getBoundingClientRect().right > e.clientX
         );
-        console.log({ dropIndex });
         if (dropIndex === -1) {
-            const newDiv = draggableArr.filter(
-                (v) => v.id == e.dataTransfer.getData("Id")
+            const newDiv: blockInterface[] = blocks.filter(
+                (v: blockInterface) => v._id == e.dataTransfer.getData("Id")
             );
-            setCompleted((p: any) => [...p, ...newDiv]);
+            setEquation((p) => [...p, ...newDiv]);
         } else {
-            const newDiv = draggableArr.filter(
-                (v) => v.id == e.dataTransfer.getData("Id")
+            const newDiv = blocks.filter(
+                (v) => v._id == e.dataTransfer.getData("Id")
             );
-            const newCompleted = completed.splice(dropIndex, 0, ...newDiv);
-            setCompleted((p: any) => [...p, ...newCompleted]);
+            const newEquation = equation.splice(dropIndex, 0, ...newDiv);
+            setEquation((p: any) => [...p, ...newEquation]);
         }
     };
 
+    const removeBlock = (index: number) => {
+        console.log({ index });
+        console.log(equation.splice(index, 1));
+        setEquation((p) => p.filter((v, i) => i !== index));
+    };
+
     return (
-        <div className="h-screen w-screen overflow-hidden flex justify-center items-center gap-8 bg-slate-200 p-20">
+        <div className="w-screen h-screen overflow-hidden bg-slate-200">
             {/* <div className="h-full overflow-y-scroll"> */}
-            <div className="flex justify-center flex-wrap w-1/2 items-center gap-8 bg-white p-10 mt-20">
-                {draggableArr.map((v) => (
-                    <div
-                        key={v.id}
-                        id={v.id}
-                        draggable
-                        onDragStart={(e) =>
-                            e.dataTransfer.setData("Id", "" + v.id)
-                        }
-                        className={`h-40 w-40 ${v.color} grid place-items-center`}
-                    >
-                        {v.id}
-                    </div>
-                ))}
+            <div className="mt-4 bg-white">
+                <div className="flex flex-wrap items-center justify-center gap-8 p-10 ">
+                    {blocks.map((v) => (
+                        <div
+                            key={v._id as Key}
+                            draggable
+                            onDragStart={(e) =>
+                                e.dataTransfer.setData("Id", "" + v._id)
+                            }
+                            className={`h-20 w-20 ${v.color} grid place-items-center`}
+                        >
+                            {v.title}
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="mt-4 bg-white">
+                <div className="flex flex-wrap items-center justify-center gap-8 p-10 ">
+                    {blocks.map((v) => (
+                        <div
+                            key={v._id as Key}
+                            id={v._id}
+                            draggable
+                            onDragStart={(e) =>
+                                e.dataTransfer.setData("Id", "" + v._id)
+                            }
+                            className={`h-20 w-20 ${v.color} grid place-items-center`}
+                        >
+                            {v.title}
+                        </div>
+                    ))}
+                </div>
             </div>
             <div
-                className="flex justify-center items-center gap-8 bg-white p-10 min-w-40 w-1/2 mt-20 flex-wrap h-[27rem] overflow-y-scroll"
+                className="flex justify-center items-center gap-8 bg-white p-10 min-w-20 mt-4 flex-wrap min-h-[10rem] overflow-y-scroll"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
             >
-                {completed?.map((v: any) => (
+                {equation?.map((v, i) => (
                     <div
-                        key={v?.id}
-                        className={`h-40 w-40 ${v?.color} grid place-items-center`}
+                        key={v._id}
+                        className={`h-20 w-20 ${v?.color} grid place-items-center relative`}
                     >
-                        {v?.id}
+                        <span
+                            className="absolute text-xs cursor-pointer top-1 right-2 text-slate-600"
+                            onClick={() => removeBlock(i)}
+                        >
+                            X
+                        </span>
+                        {v?.title}
                     </div>
                 ))}
             </div>
+            <div>
+                <button className="w-full p-4 mt-4 shadow-xl bg-sky-500 hover:bg-sky-700 active:bg-sky-700">
+                    Execute
+                </button>
+            </div>
         </div>
-        // </div>
     );
 };
 
